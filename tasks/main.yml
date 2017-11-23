@@ -4,14 +4,20 @@
     name: pam-devel
   become: yes
 
+- name: Ensure pip is installed
+  package:
+    name: python-pip
+    state: latest
+  become: yes
+
 - name: Install python-pam and other keystone-auth dependencies
   pip:
     name: "{{ item }}"
+  become: yes
   with_items:
     - python-pam
     - python-memcached
     - sphinx
-  become: yes
 
 - name: Ensure extract directory exists
   file:

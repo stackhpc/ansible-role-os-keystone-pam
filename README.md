@@ -38,7 +38,7 @@ give users ssh key logins, fallback to keystone password:
         my_cloud_config: |
           ---
           clouds:
-            myprivateclound:
+            mycloud:
               auth:
                 auth_url: http://openstack.example.com:5000
                 project_name: p3
@@ -52,15 +52,27 @@ give users ssh key logins, fallback to keystone password:
             groups: wheel
           - name: "James Bond"
             user: jbond7
-            uuid: 2007
+            uid: 2007
       roles:
         - { role: stackhpc.os-config,
             os_config_content: "{{ my_cloud_config }}" }
-        - { role: stachhpc.os-keypair-login,
-            os_keypair_login_cloud: "my_cloud_config",
+        - { role: stackhpc.os-keypair-login,
+            os_keypair_login_cloud: "mycloud",
             os_keypair_login_project_name: "p3",
             os_keypair_login_users: "{{ allowed_users }}" }
-        - { role: stackhpc.os-keystone-pam }
+        - { role: stackhpc.os-keystone-pam,
+            os_keystone_pam_os_config_name: "mycloud" }
+
+An easy way to install is in virtualenv, i.e.:
+
+    sudo yum install python-virtualenv
+    sudo yum install libselinux-python
+    virtualenv .venv --system-site-packages
+    . .venv/bin/activate
+    pip install -U pip
+    pip install ansible
+    ansible-galaxy install stackhpc.os-keystone-pam stackhpc.os-keypair-login stackhpc.os-config --force
+    ansible-playbook test.yml
 
 License
 -------
