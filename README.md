@@ -1,6 +1,8 @@
 stackhpc.os-keystone-pam
 ========================
 
+[![Build Status](https://www.travis-ci.org/stackhpc/ansible-role-os-keystone-pam.svg?branch=master)](https://www.travis-ci.org/stackhpc/ansible-role-os-keystone-pam)
+
 Add OpenStack Keystone pam integration.
 
 Requirements
