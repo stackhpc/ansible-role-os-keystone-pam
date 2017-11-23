@@ -1,8 +1,11 @@
 ---
 - name: python-pam dependencies
   yum:
-    name: pam-devel
+    name: "{{ item }}"
   become: yes
+  with_items:
+    - pam-devel
+    - gcc
 
 - name: Ensure pip is installed
   package:
