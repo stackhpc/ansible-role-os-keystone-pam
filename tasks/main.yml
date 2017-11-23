@@ -2,6 +2,7 @@
 - name: python-pam dependencies
   yum:
     name: pam-devel
+  become: yes
 
 - name: Install python-pam and other keystone-auth dependencies
   pip:
@@ -10,17 +11,28 @@
     - python-pam
     - python-memcached
     - sphinx
+  become: yes
+
+- name: Ensure extract directory exists
+  file:
+    dest: "{{ os_keystone_pam_python_extract_root }}"
+    owner: root
+    group: root
+    state: directory
+  become: yes
 
 - name: Download pam-python
   get_url:
-    url: https://downloads.sourceforge.net/project/pam-python/pam-python-1.0.6-1/pam-python-1.0.6.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fpam-python%2Ffiles%2Fpam-python-1.0.6-1%2F&ts=1510755052&use_mirror=netcologne
-    dest: /root/pam-python-1.0.6.tar.gz
+    url: "{{ os_keystone_pam_python_pam_url }}"
+    dest: "{{ os_keystone_pam_python_extract_root }}/{{ os_keystone_pam_python_pam_version }}.tar.gz"
+  become: yes
 
 - name: Extract pam-python
   unarchive:
-    src: /root/pam-python-1.0.6.tar.gz
-    dest: /root/
+    src: "{{ os_keystone_pam_python_extract_root }}/{{ os_keystone_pam_python_pam_version }}.tar.gz"
+    dest: "{{ os_keystone_pam_python_extract_root }}"
     remote_src: yes
+  become: yes
 
 - name: Build and Install python-pam
   shell: |
@@ -28,40 +40,45 @@
       python setup.py install
       cd ..
       make
-      cp src/pam_python.so /usr/lib64/security/pam_python.so
+      cp src/pam_python.so {{ os_keystone_pam_python_pam_lib_path }}
   args:
-    chdir: /root/pam-python-1.0.6
-    creates: /usr/lib64/security/pam_python.so
+    chdir: "{{ os_keystone_pam_python_path }}"
+    creates: "{{ os_keystone_pam_python_pam_lib_path }}"
+  become: yes
 
 - name: Install keystone-auth pam
   get_url:
-    url: https://raw.githubusercontent.com/stackhpc/pam-keystone/ef863a13592a7e7f87b2fc48e1d86187155ce6a5/keystone-auth.py
-    dest: /usr/lib64/security/
+    url: "{{ os_keystone_pam_keystone_auth_py_url }}"
+    dest: "{{ os_keystone_pam_lib_path }}"
     mode: 0555
+  become: yes
 
-- name: Get selinux policy violation capture
+- name: Copy over selinux policy violation capture
   copy:
     src: pam-python-selinux-capture
-    dest: /root/pam-python-1.0.6/pam-python-selinux-capture
+    dest: "{{ os_keystone_pam_python_extract_root }}/pam-python-selinux-capture"
+  become: yes
 
 - name: Generate and install se-linux module
   shell: |
       cat pam-python-selinux-capture | audit2allow -M keystone-pam
       semodule -i keystone-pam.pp
   args:
-    chdir: /root/pam-python-1.0.6
-    creates: /root/pam-python-1.0.6/keystone-pam.pp
+    chdir: "{{ os_keystone_pam_python_extract_root }}"
+    creates: "{{ os_keystone_pam_python_extract_root }}/keystone-pam.pp"
+  become: yes
 
 - name: Update PAM auth configuration
   lineinfile:
     create: no
     state: present
     insertbefore: "auth *sufficient *pam_unix.*"
-    line: "auth        sufficient    pam_python.so /usr/lib64/security/keystone-auth.py {{ keystone_user_os_config_name_pam }}"
+    line: "auth        sufficient    pam_python.so {{ os_keystone_pam_lib_path }}/keystone-auth.py {{ os_keystone_pam_os_config_name }}"
     path: "{{ item }}"
   with_items:
     - /etc/pam.d/system-auth-ac
     - /etc/pam.d/password-auth-ac
+  become: yes
 
 - name: Enable PasswordAuthentication in SSH config
   lineinfile:
@@ -73,3 +90,6 @@
     line: "PasswordAuthentication yes"
   notify:
     - Restart SSH
+  become: yes
+
+# Note: need to create the users, currently stackhpc.os-keypair-login does.
