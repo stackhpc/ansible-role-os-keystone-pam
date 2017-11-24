@@ -33,6 +33,7 @@ Example Playbook
 This example pulls a few things together so you push the OpenStack config,
 give users ssh key logins, fallback to keystone password:
 
+    ---
     - hosts: all
       vars:
         my_cloud_config: |
@@ -63,16 +64,22 @@ give users ssh key logins, fallback to keystone password:
         - { role: stackhpc.os-keystone-pam,
             os_keystone_pam_os_config_name: "mycloud" }
 
-An easy way to install is in virtualenv, i.e.:
+An easy way to this example is:
 
-    sudo yum install python-virtualenv
-    sudo yum install libselinux-python
+.. code-block::
+
+    sudo yum install python-virtualenv libselinux-python
+
     virtualenv .venv --system-site-packages
     . .venv/bin/activate
     pip install -U pip
-    pip install ansible
-    ansible-galaxy install stackhpc.os-keystone-pam stackhpc.os-keypair-login stackhpc.os-config --force
-    ansible-playbook test.yml
+    pip install -U ansible
+
+    ansible-galaxy install stackhpc.os-keystone-pam \
+                           stackhpc.os-keypair-login \
+                           stackhpc.os-config
+
+    ansible-playbook -i "localhost," -c local test.yml
 
 License
 -------
