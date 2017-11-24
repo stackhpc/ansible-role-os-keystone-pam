@@ -22,7 +22,7 @@ Dependencies
 
 This role depends on openstack configuration being placed at
 `/etc/openstack/clouds.yaml`
-One way to do that is using the role ``stackhpc.os-config`.
+One way to do that is using the role ``stackhpc.os-config``.
 
 This role also depends on the users already being created. While ansible makes
 that easy, but this should help: ``stackhpc.os-keypair-login``
@@ -65,8 +65,6 @@ give users ssh key logins, fallback to keystone password:
             os_keystone_pam_os_config_name: "mycloud" }
 
 An easy way to this example is:
-
-.. code-block::
 
     sudo yum install python-virtualenv libselinux-python
 
