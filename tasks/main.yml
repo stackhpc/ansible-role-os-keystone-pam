@@ -9,7 +9,7 @@
 
 - name: Ensure pip is installed
   package:
-    name: python-pip
+    name: python-pip,python-devel
     state: latest
   become: yes
 
